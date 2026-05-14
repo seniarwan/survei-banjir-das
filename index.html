@@ -1,0 +1,1914 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0D2B55">
+<link rel="manifest" href="manifest.json">
+<title>Survei Banjir – DAS Randangan</title>
+<style>
+/* ── Google Fonts ── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+/* ── CSS Variables ── */
+:root {
+  --navy:       #0D2B55;
+  --blue:       #1565C0;
+  --teal:       #00838F;
+  --teal-light: #E0F7FA;
+  --gold:       #F9A825;
+  --gold-light: #FFF8E1;
+  --red:        #C62828;
+  --green:      #2E7D32;
+  --green-light:#E8F5E9;
+  --gray-50:    #F8FAFC;
+  --gray-100:   #F1F5F9;
+  --gray-200:   #E2E8F0;
+  --gray-400:   #94A3B8;
+  --gray-600:   #475569;
+  --gray-800:   #1E293B;
+  --white:      #FFFFFF;
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.10);
+  --shadow-lg:  0 10px 30px rgba(0,0,0,0.12);
+  --radius:     12px;
+  --radius-sm:  8px;
+  --font:       'DM Sans', sans-serif;
+  --font-mono:  'DM Mono', monospace;
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: var(--font);
+  background: var(--gray-100);
+  color: var(--gray-800);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+button { font-family: var(--font); cursor: pointer; border: none; outline: none; }
+input, select, textarea { font-family: var(--font); outline: none; }
+
+/* ── Top Bar ── */
+#topbar {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--navy);
+  padding: 0 16px;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+#topbar-left { display: flex; align-items: center; gap: 10px; }
+#topbar-logo {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--teal);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+#topbar-title { color: var(--white); font-size: 14px; font-weight: 600; line-height: 1.2; }
+#topbar-sub { color: rgba(255,255,255,0.55); font-size: 11px; }
+#sync-btn {
+  background: var(--teal); color: var(--white);
+  padding: 8px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; gap: 6px;
+  transition: all 0.2s;
+}
+#sync-btn:active { opacity: 0.8; transform: scale(0.97); }
+#sync-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--gold);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+#sync-dot.synced { background: #4CAF50; animation: none; }
+
+/* ── Progress Bar ── */
+#progress-wrap {
+  background: var(--white);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--gray-200);
+}
+#progress-steps {
+  display: flex; gap: 4px; margin-bottom: 8px;
+}
+.step-pip {
+  flex: 1; height: 4px; border-radius: 4px;
+  background: var(--gray-200);
+  transition: background 0.3s;
+}
+.step-pip.active { background: var(--teal); }
+.step-pip.done   { background: var(--navy); }
+#progress-label {
+  font-size: 11px; color: var(--gray-400);
+  display: flex; justify-content: space-between;
+}
+#progress-label span { font-weight: 600; color: var(--teal); }
+
+/* ── Section Pages ── */
+.page { display: none; padding: 16px; }
+.page.active { display: block; }
+
+/* ── Section Header ── */
+.sec-header {
+  background: var(--navy);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 0;
+}
+.sec-badge {
+  background: var(--teal);
+  color: var(--white);
+  font-size: 10px; font-weight: 700;
+  padding: 3px 8px; border-radius: 20px;
+  letter-spacing: 0.05em;
+}
+.sec-title { color: var(--white); font-size: 15px; font-weight: 600; }
+.sec-body {
+  background: var(--white);
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 16px;
+}
+
+/* ── Form Fields ── */
+.field-group { margin-bottom: 16px; }
+.field-label {
+  font-size: 12px; font-weight: 600;
+  color: var(--gray-600);
+  margin-bottom: 6px;
+  display: flex; align-items: center; gap: 4px;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.field-label .req { color: var(--red); margin-left: 2px; }
+.field-row { display: flex; gap: 8px; }
+.field-row .field-group { flex: 1; }
+
+input[type="text"], input[type="number"], input[type="tel"],
+input[type="date"], select, textarea {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--gray-800);
+  background: var(--gray-50);
+  transition: border 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(0,131,143,0.12);
+  background: var(--white);
+}
+textarea { min-height: 80px; resize: vertical; }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394A3B8' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+
+/* ── GPS Field ── */
+.gps-wrap {
+  background: var(--teal-light);
+  border: 1.5px solid #80DEEA;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+.gps-values {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; margin-bottom: 10px;
+}
+.gps-val-box { background: var(--white); border-radius: 6px; padding: 8px 10px; }
+.gps-val-label { font-size: 10px; color: var(--teal); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.gps-val-num { font-family: var(--font-mono); font-size: 13px; color: var(--gray-800); margin-top: 2px; }
+#gps-accuracy { font-size: 11px; color: var(--gray-400); margin-bottom: 8px; }
+#gps-accuracy.good { color: var(--green); }
+#gps-accuracy.bad  { color: var(--red); }
+#gps-btn {
+  width: 100%;
+  background: var(--teal);
+  color: var(--white);
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: all 0.2s;
+}
+#gps-btn:active { opacity: 0.85; }
+#gps-btn.loading { background: var(--gray-400); }
+
+/* ── Radio / Checkbox Options ── */
+.options-grid { display: flex; flex-direction: column; gap: 6px; }
+.options-grid.two-col { display: grid; grid-template-columns: 1fr 1fr; }
+.opt-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px;
+  background: var(--gray-50);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.opt-item.selected {
+  background: var(--teal-light);
+  border-color: var(--teal);
+}
+.opt-item input[type="radio"],
+.opt-item input[type="checkbox"] {
+  width: 18px; height: 18px; min-width: 18px;
+  accent-color: var(--teal);
+  margin-top: 1px;
+}
+.opt-label { font-size: 13px; line-height: 1.4; color: var(--gray-800); }
+.opt-key { font-weight: 700; color: var(--teal); margin-right: 4px; }
+
+/* ── Other Input inline ── */
+.other-input {
+  width: 100%; margin-top: 6px;
+  padding: 8px 10px;
+  border: 1.5px dashed var(--gray-200);
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--white);
+  display: none;
+}
+.other-input.show { display: block; }
+
+/* ── Dynamic Table ── */
+.dyn-table-wrap { overflow-x: auto; }
+.dyn-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 12px;
+}
+.dyn-table th {
+  background: var(--navy); color: var(--white);
+  padding: 8px 6px; text-align: left;
+  font-size: 11px; font-weight: 600;
+}
+.dyn-table td {
+  padding: 4px;
+  border-bottom: 1px solid var(--gray-200);
+}
+.dyn-table td input {
+  padding: 7px 8px; font-size: 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 4px; background: var(--gray-50);
+}
+.dyn-table tr:nth-child(even) td { background: var(--gray-50); }
+.add-row-btn {
+  margin-top: 8px;
+  background: none;
+  border: 1.5px dashed var(--teal);
+  color: var(--teal);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ── Photo Upload ── */
+.photo-grid { display: flex; flex-direction: column; gap: 12px; }
+.photo-card {
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s;
+}
+.photo-card.has-photo { border-color: var(--teal); }
+.photo-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+}
+.photo-card-label {
+  font-size: 12px; font-weight: 700; color: var(--gray-600);
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.photo-remove {
+  background: rgba(198,40,40,0.1); color: var(--red);
+  border-radius: 20px; padding: 3px 10px;
+  font-size: 11px; font-weight: 700;
+  display: none; align-items: center; gap: 4px;
+  border: none; cursor: pointer;
+}
+.photo-card.has-photo .photo-remove { display: flex; }
+.photo-preview-wrap {
+  position: relative; width: 100%;
+  aspect-ratio: 4/3;
+  background: var(--gray-100);
+  display: none; overflow: hidden;
+}
+.photo-card.has-photo .photo-preview-wrap { display: block; }
+.photo-preview-wrap img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.photo-status {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(0,131,143,0.9); color: white;
+  font-size: 11px; font-weight: 600; text-align: center;
+  padding: 5px; display: none;
+}
+.photo-card.uploading .photo-status { display: block; }
+.photo-btns {
+  display: flex; gap: 8px; padding: 10px 12px;
+}
+.photo-btn-cam, .photo-btn-gal {
+  flex: 1; padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+.photo-btn-cam {
+  background: var(--navy); color: var(--white);
+  border: none;
+}
+.photo-btn-gal {
+  background: var(--white); color: var(--navy);
+  border: 1.5px solid var(--navy);
+}
+.photo-btn-cam:active, .photo-btn-gal:active { opacity: 0.8; transform: scale(0.97); }
+.photo-card.has-photo .photo-btn-cam,
+.photo-card.has-photo .photo-btn-gal { display: none; }
+input[type="file"] { display: none; }
+
+/* ── Info Box ── */
+.info-box {
+  background: var(--gold-light);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 10px 12px;
+  font-size: 12px; color: #5D4037;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.info-box.blue {
+  background: #E3F2FD; border-color: var(--blue); color: #0D47A1;
+}
+.info-box.green {
+  background: var(--green-light); border-color: var(--green); color: #1B5E20;
+}
+
+/* ── Sub-section ── */
+.subsec-title {
+  font-size: 12px; font-weight: 700;
+  color: var(--teal);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 10px 0 8px;
+  border-bottom: 1.5px solid var(--teal-light);
+  margin-bottom: 14px;
+}
+
+/* ── Nav Buttons ── */
+.nav-btns {
+  display: flex; gap: 10px;
+  padding: 16px;
+  background: var(--white);
+  position: sticky; bottom: 0;
+  border-top: 1px solid var(--gray-200);
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
+}
+.btn-prev, .btn-next, .btn-submit {
+  flex: 1; padding: 14px;
+  border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-prev {
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border: 1.5px solid var(--gray-200);
+}
+.btn-next  { background: var(--navy);  color: var(--white); }
+.btn-submit { background: var(--green); color: var(--white); }
+.btn-prev:active, .btn-next:active, .btn-submit:active { opacity: 0.85; transform: scale(0.98); }
+
+/* ── Toast ── */
+#toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: var(--gray-800); color: var(--white);
+  padding: 10px 18px; border-radius: 20px;
+  font-size: 13px; font-weight: 500;
+  white-space: nowrap;
+  opacity: 0; transition: opacity 0.3s;
+  z-index: 999; pointer-events: none;
+}
+#toast.show { opacity: 1; }
+#toast.success { background: var(--green); }
+#toast.error   { background: var(--red); }
+
+/* ── Pending Badge ── */
+#pending-badge {
+  display: none;
+  background: var(--gold);
+  color: var(--navy);
+  font-size: 10px; font-weight: 700;
+  padding: 2px 6px; border-radius: 10px;
+}
+
+/* ── Cover / Welcome ── */
+#cover {
+  min-height: 100vh;
+  background: var(--navy);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 32px 24px;
+  text-align: center;
+}
+.cover-logo {
+  width: 72px; height: 72px; border-radius: 20px;
+  background: var(--teal);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; margin: 0 auto 20px;
+  box-shadow: 0 8px 24px rgba(0,131,143,0.4);
+}
+.cover-title { color: var(--white); font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.cover-sub { color: rgba(255,255,255,0.6); font-size: 13px; margin-bottom: 32px; line-height: 1.5; }
+.cover-meta {
+  background: rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  padding: 16px; width: 100%; max-width: 340px;
+  margin-bottom: 28px; text-align: left;
+}
+.cover-meta-row {
+  display: flex; justify-content: space-between;
+  font-size: 12px; padding: 5px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.7);
+}
+.cover-meta-row:last-child { border-bottom: none; }
+.cover-meta-row span { color: var(--white); font-weight: 600; }
+.btn-start {
+  width: 100%; max-width: 340px;
+  background: var(--teal); color: var(--white);
+  padding: 16px; border-radius: var(--radius);
+  font-size: 16px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 4px 16px rgba(0,131,143,0.35);
+  transition: all 0.2s;
+}
+.btn-start:active { transform: scale(0.97); }
+.btn-new-entry {
+  width: 100%; max-width: 340px;
+  background: transparent; color: rgba(255,255,255,0.6);
+  padding: 12px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 500; margin-top: 10px;
+  border: 1.5px solid rgba(255,255,255,0.15);
+}
+
+/* ── Submissions List ── */
+#submissions-panel {
+  background: rgba(255,255,255,0.05);
+  border-radius: var(--radius); padding: 14px;
+  width: 100%; max-width: 340px; margin-bottom: 16px;
+}
+.submissions-title {
+  color: rgba(255,255,255,0.5); font-size: 11px;
+  font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; margin-bottom: 10px;
+}
+.sub-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 12px;
+}
+.sub-item:last-child { border-bottom: none; }
+.sub-no { color: var(--white); font-weight: 600; font-family: var(--font-mono); }
+.sub-status {
+  font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+}
+.sub-status.pending { background: rgba(249,168,37,0.2); color: var(--gold); }
+.sub-status.sent    { background: rgba(46,125,50,0.2);  color: #4CAF50; }
+
+/* ── Offline Indicator ── */
+#offline-bar {
+  display: none;
+  background: #E65100; color: var(--white);
+  text-align: center; font-size: 11px; font-weight: 600;
+  padding: 4px; letter-spacing: 0.03em;
+}
+#offline-bar.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ══ COVER SCREEN ══════════════════════════════════════════ -->
+<div id="cover">
+  <div class="cover-logo">🌊</div>
+  <div class="cover-title">Survei Bahaya Banjir</div>
+  <div class="cover-sub">Pemetaan DAS Randangan, Lemito & Popayato<br>Kabupaten Pohuwato · Mei 2025</div>
+
+  <div class="cover-meta">
+    <div class="cover-meta-row">Tim <span>IPB University</span></div>
+    <div class="cover-meta-row">Pemberi Kerja <span>PT Berau Jasa Andalan</span></div>
+    <div class="cover-meta-row">Versi App <span>1.0.0</span></div>
+    <div class="cover-meta-row">Status <span id="cover-status">Memuat…</span></div>
+  </div>
+
+  <div id="submissions-panel" style="display:none">
+    <div class="submissions-title">📋 Data Tersimpan</div>
+    <div id="submissions-list"></div>
+  </div>
+
+  <button class="btn-start" onclick="startForm()">
+    ➕ Isi Kuesioner Baru
+  </button>
+  <button class="btn-new-entry" onclick="syncAll()">
+    🔄 Kirim Data Pending
+  </button>
+</div>
+
+<!-- ══ MAIN APP ═══════════════════════════════════════════════ -->
+<div id="app" style="display:none">
+
+  <div id="offline-bar">📵 Offline – Data akan disimpan di perangkat</div>
+
+  <!-- Top Bar -->
+  <div id="topbar">
+    <div class="topbar-left" style="display:flex;align-items:center;gap:10px">
+      <button onclick="goHome()" style="background:none;color:rgba(255,255,255,0.6);font-size:20px;padding:4px 8px 4px 0">‹</button>
+      <div>
+        <div id="topbar-title">Survei Banjir</div>
+        <div id="topbar-sub">DAS Randangan</div>
+      </div>
+    </div>
+    <button id="sync-btn" onclick="syncAll()">
+      <span id="sync-dot"></span>
+      <span id="sync-label">Kirim</span>
+      <span id="pending-badge"></span>
+    </button>
+  </div>
+
+  <!-- Progress -->
+  <div id="progress-wrap">
+    <div id="progress-steps"></div>
+    <div id="progress-label">
+      <span id="progress-section">Bagian A</span>
+      <span id="progress-count">1 / 7</span>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 0: Identitas & Lokasi ══ -->
+  <div class="page active" id="page-0">
+    <div class="sec-header">
+      <div class="sec-badge">A</div>
+      <div class="sec-title">Identitas & Lokasi Survei</div>
+    </div>
+    <div class="sec-body">
+
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">No. Kuesioner<span class="req">*</span></div>
+          <input type="text" id="f-no-kues" placeholder="Otomatis / manual" readonly style="background:#f0f4f8;color:var(--teal);font-family:var(--font-mono);font-weight:600">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Tanggal<span class="req">*</span></div>
+          <input type="date" id="f-tanggal">
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Nama Enumerator<span class="req">*</span></div>
+        <input type="text" id="f-enumerator" placeholder="Nama lengkap">
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">No. HP Enumerator</div>
+        <input type="tel" id="f-hp-enum" placeholder="08xxxxxxxxxx">
+      </div>
+
+      <!-- GPS -->
+      <div class="field-group">
+        <div class="field-label">📍 Koordinat GPS<span class="req">*</span></div>
+        <div class="gps-wrap">
+          <div class="gps-values">
+            <div class="gps-val-box">
+              <div class="gps-val-label">Latitude</div>
+              <div class="gps-val-num" id="gps-lat">–</div>
+            </div>
+            <div class="gps-val-box">
+              <div class="gps-val-label">Longitude</div>
+              <div class="gps-val-num" id="gps-lon">–</div>
+            </div>
+            <div class="gps-val-box">
+              <div class="gps-val-label">Elevasi (m)</div>
+              <div class="gps-val-num" id="gps-elev">–</div>
+            </div>
+            <div class="gps-val-box">
+              <div class="gps-val-label">Akurasi (m)</div>
+              <div class="gps-val-num" id="gps-acc">–</div>
+            </div>
+          </div>
+          <div id="gps-accuracy">Tekan tombol untuk mengambil lokasi</div>
+          <button id="gps-btn" onclick="getGPS()">📡 Ambil Lokasi Saat Ini</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input type="number" id="gps-lat-manual" placeholder="Lat manual" step="0.000001" style="flex:1;font-size:12px">
+          <input type="number" id="gps-lon-manual" placeholder="Lon manual" step="0.000001" style="flex:1;font-size:12px">
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Desa / Kelurahan<span class="req">*</span></div>
+        <input type="text" id="f-desa" placeholder="Nama desa/kelurahan">
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">Kecamatan</div>
+          <input type="text" id="f-kecamatan">
+        </div>
+        <div class="field-group">
+          <div class="field-label">DAS</div>
+          <select id="f-das">
+            <option value="">Pilih DAS</option>
+            <option>DAS Randangan</option>
+            <option>DAS Lemito</option>
+            <option>DAS Popayato</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="subsec-title">Data Responden</div>
+
+      <div class="field-group">
+        <div class="field-label">Nama Responden</div>
+        <input type="text" id="f-nama-resp" placeholder="Nama pemilik/penghuni">
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">Usia (tahun)</div>
+          <input type="number" id="f-usia" placeholder="35" min="1" max="120">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Lama Tinggal (thn)</div>
+          <input type="number" id="f-lama-tinggal" placeholder="10" min="0">
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Jenis Kelamin</div>
+        <div class="options-grid two-col">
+          <label class="opt-item" onclick="selectOpt(this,'jk')">
+            <input type="radio" name="jk" value="Laki-laki">
+            <span class="opt-label">Laki-laki</span>
+          </label>
+          <label class="opt-item" onclick="selectOpt(this,'jk')">
+            <input type="radio" name="jk" value="Perempuan">
+            <span class="opt-label">Perempuan</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Status Kepemilikan</div>
+        <div class="options-grid">
+          <label class="opt-item" onclick="selectOpt(this,'kepemilikan')">
+            <input type="radio" name="kepemilikan" value="Milik sendiri">
+            <span class="opt-label">Milik sendiri</span>
+          </label>
+          <label class="opt-item" onclick="selectOpt(this,'kepemilikan')">
+            <input type="radio" name="kepemilikan" value="Sewa/kontrak">
+            <span class="opt-label">Sewa / Kontrak</span>
+          </label>
+          <label class="opt-item" onclick="selectOpt(this,'kepemilikan')">
+            <input type="radio" name="kepemilikan" value="Keluarga">
+            <span class="opt-label">Keluarga</span>
+          </label>
+          <label class="opt-item" onclick="selectOpt(this,'kepemilikan')">
+            <input type="radio" name="kepemilikan" value="Lainnya">
+            <span class="opt-label">Lainnya</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div><!-- /page-0 -->
+
+  <!-- ══ PAGE 1: Jejak Banjir ══ -->
+  <div class="page" id="page-1">
+    <div class="sec-header">
+      <div class="sec-badge">B</div>
+      <div class="sec-title">Jejak Banjir & Tinggi Genangan</div>
+    </div>
+    <div class="sec-body">
+
+      <div class="field-group">
+        <div class="field-label">Q1. Pernah terdampak banjir 5 tahun terakhir?<span class="req">*</span></div>
+        <div class="options-grid two-col">
+          <label class="opt-item" onclick="selectOpt(this,'b-pernah');toggleSec('b-pernah','Ya','sec-b-detail')">
+            <input type="radio" name="b-pernah" value="Ya">
+            <span class="opt-label">✅ Ya</span>
+          </label>
+          <label class="opt-item" onclick="selectOpt(this,'b-pernah');toggleSec('b-pernah','Ya','sec-b-detail')">
+            <input type="radio" name="b-pernah" value="Tidak">
+            <span class="opt-label">❌ Tidak</span>
+          </label>
+        </div>
+      </div>
+
+      <div id="sec-b-detail" style="display:none">
+        <div class="field-group">
+          <div class="field-label">Q2. Frekuensi banjir 5 tahun terakhir</div>
+          <div class="options-grid">
+            <label class="opt-item" onclick="selectOpt(this,'b-frek')"><input type="radio" name="b-frek" value="1 kali"><span class="opt-label">1 kali</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'b-frek')"><input type="radio" name="b-frek" value="2-3 kali"><span class="opt-label">2 – 3 kali</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'b-frek')"><input type="radio" name="b-frek" value="4-5 kali"><span class="opt-label">4 – 5 kali</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'b-frek')"><input type="radio" name="b-frek" value=">5 kali"><span class="opt-label">Lebih dari 5 kali</span></label>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Q3. Ada jejak fisik banjir terlihat?</div>
+          <div class="options-grid two-col">
+            <label class="opt-item" onclick="selectOpt(this,'b-jejak');toggleSec('b-jejak','Ya','sec-b-ukur')"><input type="radio" name="b-jejak" value="Ya"><span class="opt-label">Ya</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'b-jejak');toggleSec('b-jejak','Ya','sec-b-ukur')"><input type="radio" name="b-jejak" value="Tidak"><span class="opt-label">Tidak</span></label>
+          </div>
+        </div>
+
+        <div id="sec-b-ukur" style="display:none">
+          <div class="field-group">
+            <div class="field-label">Q4. Tabel Pengukuran Tinggi Jejak Banjir</div>
+            <div class="info-box">📏 Ukur dari permukaan lantai ke watermark tertinggi yang masih terlihat</div>
+            <div class="dyn-table-wrap">
+              <table class="dyn-table" id="tbl-jejak">
+                <thead><tr>
+                  <th>Thn/Est.</th><th>Tinggi (cm)</th><th>Lokasi Ukur</th><th>Ket.</th>
+                </tr></thead>
+                <tbody id="tbl-jejak-body">
+                  <tr>
+                    <td><input type="text" placeholder="2023"></td>
+                    <td><input type="number" placeholder="80"></td>
+                    <td><input type="text" placeholder="Dinding teras"></td>
+                    <td><input type="text" placeholder="-"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <button class="add-row-btn" onclick="addRow('tbl-jejak-body',4)">+ Tambah baris</button>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Q5. Tinggi Genangan Terbesar (cm) – isian numerik</div>
+          <div class="info-box">Masukkan nilai dalam cm. Panduan: &lt;30 = di bawah lutut · 30–60 = lutut–pinggang · 60–100 = pinggang–dada · 100–150 = dada–kepala · &gt;150 = di atas kepala</div>
+          <input type="number" id="b-tinggi-num" placeholder="contoh: 85" min="1" max="700">
+          <div style="font-size:11px;color:var(--gray-400);margin-top:4px">Jika tidak pasti, isi estimasi terbaik. Nilai ini digunakan untuk validasi model hidrologi.</div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Q6. Bagian bangunan terendam (banjir terbesar)</div>
+          <div class="options-grid">
+            <label class="opt-item" onclick="selectOpt(this,'b-bagian')"><input type="radio" name="b-bagian" value="Hanya halaman"><span class="opt-label">Hanya halaman/pekarangan</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'b-bagian')"><input type="radio" name="b-bagian" value="Lantai dasar"><span class="opt-label">Lantai dasar (dalam rumah)</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'b-bagian')"><input type="radio" name="b-bagian" value="Hingga langit-langit lantai 1"><span class="opt-label">Hingga langit-langit lantai dasar</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'b-bagian')"><input type="radio" name="b-bagian" value="Lantai 2 atau lebih"><span class="opt-label">Lantai 2 / lebih</span></label>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Q7. Arah datang banjir yang dirasakan</div>
+          <div class="info-box blue">Untuk identifikasi mekanisme banjir: luapan langsung vs backwater vs genangan lokal</div>
+          <div class="options-grid">
+            <label class="opt-item" onclick="selectOpt(this,'b-arah')"><input type="radio" name="b-arah" value="Dari arah sungai utama (luapan langsung)"><span class="opt-label">Dari arah sungai utama (luapan langsung)</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'b-arah')"><input type="radio" name="b-arah" value="Dari anak sungai / saluran sekunder"><span class="opt-label">Dari anak sungai / saluran sekunder</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'b-arah')"><input type="radio" name="b-arah" value="Genangan hujan lokal (tidak ada aliran jelas)"><span class="opt-label">Genangan hujan lokal (tidak ada aliran jelas)</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'b-arah')"><input type="radio" name="b-arah" value="Dari drainase/got yang meluap"><span class="opt-label">Dari drainase / got yang meluap</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'b-arah')"><input type="radio" name="b-arah" value="Kombinasi beberapa arah"><span class="opt-label">Kombinasi beberapa arah</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'b-arah')"><input type="radio" name="b-arah" value="Tidak tahu"><span class="opt-label">Tidak tahu</span></label>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Q8. Apakah lokasi ini tetap tergenang sisa air setelah banjir surut?</div>
+          <div class="info-box blue">Indikator cekungan/depresi — penting untuk identifikasi flood retention area di model</div>
+          <div class="options-grid">
+            <label class="opt-item" onclick="selectOpt(this,'b-sisa')"><input type="radio" name="b-sisa" value="Ya, selalu ada sisa genangan beberapa hari"><span class="opt-label">Ya, selalu ada sisa genangan beberapa hari</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'b-sisa')"><input type="radio" name="b-sisa" value="Kadang ada sisa genangan"><span class="opt-label">Kadang ada sisa genangan</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'b-sisa')"><input type="radio" name="b-sisa" value="Tidak, lokasi kering segera setelah surut"><span class="opt-label">Tidak, lokasi kering segera setelah surut</span></label>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label">Q9. Estimasi elevasi relatif lokasi terhadap jalan/tanah sekitar</div>
+          <div class="options-grid">
+            <label class="opt-item" onclick="selectOpt(this,'b-elev-rel')"><input type="radio" name="b-elev-rel" value="Lebih rendah dari jalan sekitar (cekungan)"><span class="opt-label">Lebih rendah dari jalan / tanah sekitar (cekungan)</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'b-elev-rel')"><input type="radio" name="b-elev-rel" value="Sejajar dengan jalan sekitar"><span class="opt-label">Sejajar dengan jalan / tanah sekitar</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'b-elev-rel')"><input type="radio" name="b-elev-rel" value="Lebih tinggi dari jalan sekitar"><span class="opt-label">Lebih tinggi dari jalan / tanah sekitar</span></label>
+          </div>
+        </div>
+      </div><!-- /sec-b-detail -->
+    </div>
+  </div><!-- /page-1 -->
+
+  <!-- ══ PAGE 2: Karakteristik Bangunan ══ -->
+  <div class="page" id="page-2">
+    <div class="sec-header">
+      <div class="sec-badge">C</div>
+      <div class="sec-title">Karakteristik Bangunan</div>
+    </div>
+    <div class="sec-body">
+
+      <div class="field-group">
+        <div class="field-label">Q8. Fungsi Bangunan</div>
+        <div class="options-grid">
+          <label class="opt-item" onclick="selectOpt(this,'c-fungsi')"><input type="radio" name="c-fungsi" value="Hunian"><span class="opt-label">Hunian / rumah tinggal</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'c-fungsi')"><input type="radio" name="c-fungsi" value="Komersial"><span class="opt-label">Komersial (toko, warung, kantor)</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'c-fungsi')"><input type="radio" name="c-fungsi" value="Fasilitas umum"><span class="opt-label">Fasilitas umum (sekolah, puskesmas)</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'c-fungsi')"><input type="radio" name="c-fungsi" value="Gudang/industri"><span class="opt-label">Gudang / industri</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'c-fungsi')"><input type="radio" name="c-fungsi" value="Campuran"><span class="opt-label">Campuran (hunian + usaha)</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'c-fungsi')"><input type="radio" name="c-fungsi" value="Lainnya"><span class="opt-label">Lainnya: <input class="other-input" id="c-fungsi-other" placeholder="sebutkan…"></span></label>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">Q9. Jumlah Lantai</div>
+          <div class="options-grid">
+            <label class="opt-item" onclick="selectOpt(this,'c-lantai')"><input type="radio" name="c-lantai" value="1 lantai"><span class="opt-label">1 lantai</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'c-lantai')"><input type="radio" name="c-lantai" value="2 lantai"><span class="opt-label">2 lantai</span></label>
+            <label class="opt-item" onclick="selectOpt(this,'c-lantai')"><input type="radio" name="c-lantai" value="≥3 lantai"><span class="opt-label">≥3 lantai</span></label>
+          </div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Q10. Tinggi Lantai dari Tanah (cm)</div>
+          <input type="number" id="c-tinggi-lantai" placeholder="contoh: 20" min="0">
+          <div style="font-size:11px;color:var(--gray-400);margin-top:4px">Dari muka jalan ke ambang bawah pintu</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q11. Struktur Bangunan</div>
+        <div class="options-grid">
+          <label class="opt-item" onclick="selectOpt(this,'c-struktur')"><input type="radio" name="c-struktur" value="Beton bertulang permanen"><span class="opt-label">Beton bertulang permanen</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'c-struktur')"><input type="radio" name="c-struktur" value="Dinding bata/batako"><span class="opt-label">Dinding bata / batako</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'c-struktur')"><input type="radio" name="c-struktur" value="Dinding kayu"><span class="opt-label">Dinding kayu</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'c-struktur')"><input type="radio" name="c-struktur" value="Dinding bambu/anyaman"><span class="opt-label">Dinding bambu / anyaman</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'c-struktur')"><input type="radio" name="c-struktur" value="Semi permanen"><span class="opt-label">Semi permanen (gabungan)</span></label>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">Q12. Material Atap</div>
+          <select id="c-atap">
+            <option value="">Pilih…</option>
+            <option>Genteng tanah liat</option>
+            <option>Seng / metal</option>
+            <option>Asbes</option>
+            <option>Beton</option>
+            <option>Lainnya</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Q13. Pondasi</div>
+          <select id="c-pondasi">
+            <option value="">Pilih…</option>
+            <option>Tiang pancang / cerucuk</option>
+            <option>Batu kali</option>
+            <option>Plat beton</option>
+            <option>Tidak diketahui</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q14. Kondisi Fisik Bangunan</div>
+        <div class="options-grid">
+          <label class="opt-item" onclick="selectOpt(this,'c-kondisi')"><input type="radio" name="c-kondisi" value="Baik"><span class="opt-label">Baik – tidak ada kerusakan</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'c-kondisi')"><input type="radio" name="c-kondisi" value="Retak ringan"><span class="opt-label">Retak ringan</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'c-kondisi')"><input type="radio" name="c-kondisi" value="Retak berat"><span class="opt-label">Retak berat / penurunan dinding</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'c-kondisi')"><input type="radio" name="c-kondisi" value="Rusak sebagian"><span class="opt-label">Rusak sebagian akibat banjir</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'c-kondisi')"><input type="radio" name="c-kondisi" value="Roboh/tidak layak huni"><span class="opt-label">Roboh / tidak dapat dihuni</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q15. Upaya Adaptasi (pilih semua yang sesuai)</div>
+        <div class="options-grid" id="chk-adaptasi">
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Peninggian lantai"><span class="opt-label">Peninggian lantai / plesteran ulang</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Tanggul mini/flood barrier"><span class="opt-label">Tanggul mini / flood barrier</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Pemindahan barang ke lantai atas"><span class="opt-label">Pemindahan barang ke lantai atas</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Peninggian pondasi"><span class="opt-label">Peninggian pondasi saat renovasi</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Belum ada"><span class="opt-label">Belum ada upaya adaptasi</span></label>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">Tahun Bangunan</div>
+          <input type="number" id="c-tahun" placeholder="1995" min="1900" max="2025">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Dimensi (P x L m)</div>
+          <input type="text" id="c-dimensi" placeholder="10 x 8">
+        </div>
+      </div>
+    </div>
+  </div><!-- /page-2 -->
+
+  <!-- ══ PAGE 3: Tutupan Lahan ══ -->
+  <div class="page" id="page-3">
+    <div class="sec-header">
+      <div class="sec-badge">D</div>
+      <div class="sec-title">Kondisi Tutupan Lahan</div>
+    </div>
+    <div class="sec-body">
+
+      <div class="field-group">
+        <div class="field-label">Q18a. Tutupan lahan dominan radius ±50m – ground truth LULC</div>
+        <div class="info-box blue">Radius 50m → validasi piksel Sentinel-2 (resolusi 10m). Pilih semua yang terlihat langsung dari titik survei.</div>
+        <div class="options-grid" id="chk-tutupan-50">
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Permukiman padat"><span class="opt-label">Permukiman / bangunan padat</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Sawah/pertanian basah"><span class="opt-label">Sawah / lahan pertanian basah</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Ladang/kebun/tegalan"><span class="opt-label">Ladang / kebun / tegalan</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Hutan/perkebunan lebat"><span class="opt-label">Hutan / perkebunan lebat</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Semak belukar"><span class="opt-label">Semak belukar</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Lahan terbuka"><span class="opt-label">Lahan terbuka / tanah kosong</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Sungai/badan air"><span class="opt-label">Sungai / badan air</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q18b. Tutupan lahan dominan radius ±200m</div>
+        <div class="options-grid" id="chk-tutupan">
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Permukiman padat"><span class="opt-label">Permukiman / bangunan padat</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Sawah/pertanian basah"><span class="opt-label">Sawah / lahan pertanian basah</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Ladang/kebun/tegalan"><span class="opt-label">Ladang / kebun / tegalan</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Hutan/perkebunan lebat"><span class="opt-label">Hutan / perkebunan lebat</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Semak belukar"><span class="opt-label">Semak belukar</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Lahan terbuka"><span class="opt-label">Lahan terbuka / tanah kosong</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Sungai/badan air"><span class="opt-label">Sungai / badan air</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q19. Perubahan tutupan lahan 5 tahun terakhir</div>
+        <div class="options-grid">
+          <label class="opt-item" onclick="selectOpt(this,'d-perubahan')"><input type="radio" name="d-perubahan" value="Tidak ada perubahan"><span class="opt-label">Tidak ada perubahan signifikan</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'d-perubahan')"><input type="radio" name="d-perubahan" value="Bertambahnya permukiman baru"><span class="opt-label">Bertambahnya lahan terbangun / permukiman baru</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'d-perubahan')"><input type="radio" name="d-perubahan" value="Berkurangnya lahan hijau/hutan"><span class="opt-label">Berkurangnya lahan hijau / hutan</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'d-perubahan')"><input type="radio" name="d-perubahan" value="Pembukaan lahan pertanian baru"><span class="opt-label">Pembukaan lahan pertanian baru</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'d-perubahan')"><input type="radio" name="d-perubahan" value="Peningkatan lahan terbuka"><span class="opt-label">Peningkatan lahan terbuka</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q20. Kondisi vegetasi riparian (tepi sungai terdekat)</div>
+        <div class="options-grid">
+          <label class="opt-item" onclick="selectOpt(this,'d-veg')"><input type="radio" name="d-veg" value="Lebat"><span class="opt-label">Lebat – banyak pohon dan semak</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'d-veg')"><input type="radio" name="d-veg" value="Sedang"><span class="opt-label">Sedang – beberapa pohon</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'d-veg')"><input type="radio" name="d-veg" value="Jarang"><span class="opt-label">Jarang – sedikit tanaman</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'d-veg')"><input type="radio" name="d-veg" value="Gundul"><span class="opt-label">Gundul – tidak ada vegetasi</span></label>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">Q21. Jarak ke sungai</div>
+          <select id="d-jarak">
+            <option value="">Pilih…</option>
+            <option>&lt; 10 m</option>
+            <option>10 – 50 m</option>
+            <option>50 – 100 m</option>
+            <option>100 – 200 m</option>
+            <option>&gt; 200 m</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Q22. Kondisi Drainase</div>
+          <select id="d-drainase">
+            <option value="">Pilih…</option>
+            <option>Ada, berfungsi baik</option>
+            <option>Ada, tersumbat/rusak</option>
+            <option>Ada, kapasitas kurang</option>
+            <option>Tidak ada drainase</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q23. Perubahan kondisi sungai/saluran terdekat</div>
+        <div class="options-grid" id="chk-sungai">
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Pendangkalan/sedimentasi"><span class="opt-label">Pendangkalan / sedimentasi bertambah</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Penyempitan akibat bangunan"><span class="opt-label">Penyempitan akibat bangunan</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Sampah menumpuk"><span class="opt-label">Sampah menumpuk di saluran</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Perubahan alur sungai"><span class="opt-label">Terjadi perubahan alur sungai</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Tidak ada perubahan"><span class="opt-label">Tidak ada perubahan signifikan</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q24. Apakah perubahan tutupan lahan berkaitan dengan perubahan intensitas banjir?</div>
+        <div class="info-box blue">Pertanyaan kausal langsung untuk triangulasi dengan temuan Tim A di hulu</div>
+        <div class="options-grid">
+          <label class="opt-item" onclick="selectOpt(this,'d-kausal')"><input type="radio" name="d-kausal" value="Ya, banjir semakin parah seiring perubahan lahan"><span class="opt-label">Ya, banjir semakin parah seiring perubahan lahan</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'d-kausal')"><input type="radio" name="d-kausal" value="Tidak ada hubungan yang dirasakan"><span class="opt-label">Tidak ada hubungan yang dirasakan</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'d-kausal')"><input type="radio" name="d-kausal" value="Banjir berkurang setelah ada perubahan lahan positif"><span class="opt-label">Banjir berkurang setelah ada perubahan lahan positif</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'d-kausal')"><input type="radio" name="d-kausal" value="Tidak tahu / tidak bisa menilai"><span class="opt-label">Tidak tahu / tidak bisa menilai</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q25. Apakah ada kaitan yang dirasakan antara aktivitas di hulu (perkebunan/pembukaan lahan) dengan perubahan banjir di sini?</div>
+        <div class="options-grid">
+          <label class="opt-item" onclick="selectOpt(this,'d-hulu')"><input type="radio" name="d-hulu" value="Ya, banjir lebih sering/besar sejak ada aktivitas di hulu"><span class="opt-label">Ya, banjir lebih sering/besar sejak ada aktivitas hulu</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'d-hulu')"><input type="radio" name="d-hulu" value="Tidak ada perubahan yang dirasakan"><span class="opt-label">Tidak ada perubahan yang dirasakan</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'d-hulu')"><input type="radio" name="d-hulu" value="Tidak tahu kondisi di hulu"><span class="opt-label">Tidak tahu kondisi di hulu</span></label>
+        </div>
+      </div>
+    </div>
+  </div><!-- /page-3 -->
+
+  <!-- ══ PAGE 4: Frekuensi Intensitas Durasi ══ -->
+  <div class="page" id="page-4">
+    <div class="sec-header">
+      <div class="sec-badge">E</div>
+      <div class="sec-title">Frekuensi, Intensitas & Durasi Banjir</div>
+    </div>
+    <div class="sec-body">
+
+      <div class="subsec-title">E.1 Frekuensi</div>
+
+      <div class="field-group">
+        <div class="field-label">Q25. Frekuensi banjir di wilayah ini (5 thn terakhir)</div>
+        <div class="options-grid">
+          <label class="opt-item" onclick="selectOpt(this,'e-frek-wil')"><input type="radio" name="e-frek-wil" value="1 kali"><span class="opt-label">1 kali</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-frek-wil')"><input type="radio" name="e-frek-wil" value="2-3 kali"><span class="opt-label">2 – 3 kali</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-frek-wil')"><input type="radio" name="e-frek-wil" value="4-6 kali"><span class="opt-label">4 – 6 kali</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-frek-wil')"><input type="radio" name="e-frek-wil" value="7-10 kali"><span class="opt-label">7 – 10 kali</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-frek-wil')"><input type="radio" name="e-frek-wil" value=">10 kali"><span class="opt-label">Lebih dari 10 kali</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q26. Musim banjir paling sering</div>
+        <div class="options-grid">
+          <label class="opt-item" onclick="selectOpt(this,'e-musim')"><input type="radio" name="e-musim" value="Puncak hujan (Des-Feb)"><span class="opt-label">Puncak musim hujan (Des – Feb)</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-musim')"><input type="radio" name="e-musim" value="Peralihan hujan-kemarau (Mar-Apr)"><span class="opt-label">Peralihan hujan ke kemarau (Mar – Apr)</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-musim')"><input type="radio" name="e-musim" value="Kemarau (kiriman hulu)"><span class="opt-label">Musim kemarau (kiriman dari hulu)</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-musim')"><input type="radio" name="e-musim" value="Sepanjang tahun"><span class="opt-label">Sepanjang tahun tanpa pola jelas</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q27. Kronologi Kejadian Banjir</div>
+        <div class="info-box">Isi data kejadian yang masih diingat. Kolom Tahun & Bulan digunakan untuk pencocokan dengan data AWLR/ARR BWS SUL II.</div>
+        <div class="dyn-table-wrap">
+          <table class="dyn-table" id="tbl-kronologi">
+            <thead><tr>
+              <th>Tahun</th><th>Bulan</th><th>Tinggi (cm)</th><th>Durasi</th><th>Sumber Air</th>
+            </tr></thead>
+            <tbody id="tbl-kronologi-body">
+              <tr>
+                <td><input type="number" placeholder="2021" min="2000" max="2025"></td>
+                <td><input type="number" placeholder="3" min="1" max="12"></td>
+                <td><input type="number" placeholder="120"></td>
+                <td><input type="text" placeholder="2 hari"></td>
+                <td><input type="text" placeholder="Luapan sungai"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <button class="add-row-btn" onclick="addRow('tbl-kronologi-body',5)">+ Tambah kejadian</button>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">Q34. Durasi banjir terbesar (jam/hari)</div>
+          <input type="text" id="e-durasi-terbesar" placeholder="contoh: 36 jam atau 2 hari">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Tahun kejadian terbesar</div>
+          <input type="number" id="e-tahun-terbesar" placeholder="2022" min="2000" max="2025">
+        </div>
+      </div>
+
+      <div class="subsec-title">E.2 Intensitas</div>
+
+      <div class="field-group">
+        <div class="field-label">Q28. Intensitas banjir terbesar yang pernah terjadi</div>
+        <div class="options-grid">
+          <label class="opt-item" onclick="selectOpt(this,'e-intens')"><input type="radio" name="e-intens" value="Ringan"><span class="opt-label">Ringan – genangan dangkal, tidak mengganggu aktivitas</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-intens')"><input type="radio" name="e-intens" value="Sedang"><span class="opt-label">Sedang – genangan dalam rumah, aktivitas terganggu</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-intens')"><input type="radio" name="e-intens" value="Berat"><span class="opt-label">Berat – harus mengungsi</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-intens')"><input type="radio" name="e-intens" value="Sangat berat"><span class="opt-label">Sangat berat – kerusakan struktural</span></label>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">Q29. Kecepatan datang banjir</div>
+          <select id="e-cepat">
+            <option value="">Pilih…</option>
+            <option>&lt; 1 jam (flash flood)</option>
+            <option>1 – 3 jam</option>
+            <option>3 – 6 jam</option>
+            <option>6 – 12 jam</option>
+            <option>&gt; 12 jam (kiriman hulu)</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Q30. Kecepatan arus</div>
+          <select id="e-arus">
+            <option value="">Pilih…</option>
+            <option>Sangat lambat</option>
+            <option>Lambat</option>
+            <option>Sedang</option>
+            <option>Deras / berbahaya</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q31. Material yang dibawa banjir</div>
+        <div class="options-grid">
+          <label class="opt-item" onclick="selectOpt(this,'e-material')"><input type="radio" name="e-material" value="Tidak ada material"><span class="opt-label">Tidak ada material</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-material')"><input type="radio" name="e-material" value="Sedikit lumpur"><span class="opt-label">Sedikit lumpur</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-material')"><input type="radio" name="e-material" value="Banyak lumpur dan sampah"><span class="opt-label">Banyak lumpur dan sampah</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-material')"><input type="radio" name="e-material" value="Material besar (pohon/batu)"><span class="opt-label">Lumpur, sampah + material besar (pohon, batu)</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q32. Peringatan sebelum banjir</div>
+        <div class="options-grid">
+          <label class="opt-item" onclick="selectOpt(this,'e-warning')"><input type="radio" name="e-warning" value="Peringatan resmi BPBD"><span class="opt-label">Ya, peringatan resmi BPBD/pemerintah</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-warning')"><input type="radio" name="e-warning" value="Info warga/kentongan"><span class="opt-label">Ya, informasi dari warga / kentongan</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-warning')"><input type="radio" name="e-warning" value="Tanda alam"><span class="opt-label">Ya, tanda alam (sungai meluap, gemuruh)</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-warning')"><input type="radio" name="e-warning" value="Tidak ada peringatan"><span class="opt-label">Tidak ada peringatan sama sekali</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q38. Apakah ada titik/lokasi yang selalu menjadi titik awal banjir terlebih dahulu?</div>
+        <div class="options-grid two-col">
+          <label class="opt-item" onclick="selectOpt(this,'e-titik-awal');toggleSec('e-titik-awal','Ya','sec-titik-awal')"><input type="radio" name="e-titik-awal" value="Ya"><span class="opt-label">Ya</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-titik-awal');toggleSec('e-titik-awal','Ya','sec-titik-awal')"><input type="radio" name="e-titik-awal" value="Tidak / tidak tahu"><span class="opt-label">Tidak / tidak tahu</span></label>
+        </div>
+        <div id="sec-titik-awal" style="display:none;margin-top:8px">
+          <input type="text" id="e-titik-awal-nama" placeholder="Sebutkan nama lokasi / deskripsi titik awal banjir">
+        </div>
+      </div>
+
+      <div class="subsec-title">E.3 Durasi & Tren</div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">Q33. Durasi rata-rata banjir</div>
+          <select id="e-durasi">
+            <option value="">Pilih…</option>
+            <option>&lt; 6 jam</option>
+            <option>6 – 12 jam</option>
+            <option>12 – 24 jam</option>
+            <option>1 – 3 hari</option>
+            <option>3 – 7 hari</option>
+            <option>&gt; 7 hari</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Q35. Lama kondisi normal kembali</div>
+          <select id="e-normal">
+            <option value="">Pilih…</option>
+            <option>&lt; 1 hari</option>
+            <option>1 – 3 hari</option>
+            <option>3 – 7 hari</option>
+            <option>&gt; 1 minggu</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q36. Tren banjir 5 thn terakhir vs sebelumnya</div>
+        <div class="options-grid">
+          <label class="opt-item" onclick="selectOpt(this,'e-tren')"><input type="radio" name="e-tren" value="Semakin sering dan parah"><span class="opt-label">Semakin sering dan parah</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-tren')"><input type="radio" name="e-tren" value="Semakin sering, intensitas sama"><span class="opt-label">Semakin sering, intensitas sama</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-tren')"><input type="radio" name="e-tren" value="Frekuensi sama, semakin parah"><span class="opt-label">Frekuensi sama, semakin parah</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-tren')"><input type="radio" name="e-tren" value="Tidak berubah"><span class="opt-label">Tidak berubah</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'e-tren')"><input type="radio" name="e-tren" value="Berkurang"><span class="opt-label">Berkurang</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q37. Penyebab utama banjir (pilih semua yang sesuai)</div>
+        <div class="options-grid" id="chk-penyebab">
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Hujan deras berkepanjangan"><span class="opt-label">Hujan deras berkepanjangan di wilayah ini</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Kiriman air dari hulu"><span class="opt-label">Kiriman air dari hulu DAS</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Kapasitas sungai kurang"><span class="opt-label">Kapasitas sungai/saluran tidak memadai</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Pendangkalan/sedimentasi"><span class="opt-label">Pendangkalan sungai / sedimentasi</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Alih fungsi lahan di hulu"><span class="opt-label">Alih fungsi lahan di hulu (deforestasi)</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Sampah menyumbat saluran"><span class="opt-label">Sampah menyumbat saluran</span></label>
+          <label class="opt-item" onclick="toggleCheck(this)"><input type="checkbox" value="Tidak ada drainase yang baik"><span class="opt-label">Tidak ada sistem drainase yang baik</span></label>
+        </div>
+      </div>
+    </div>
+  </div><!-- /page-4 -->
+
+  <!-- ══ PAGE 5: Dampak & Respons ══ -->
+  <div class="page" id="page-5">
+    <div class="sec-header">
+      <div class="sec-badge">F</div>
+      <div class="sec-title">Dampak Banjir & Respons Masyarakat</div>
+    </div>
+    <div class="sec-body">
+
+      <div class="field-group">
+        <div class="field-label">Q39. Dampak terbesar (pilih maks. 3)</div>
+        <div class="options-grid" id="chk-dampak">
+          <label class="opt-item" onclick="toggleCheck(this,'chk-dampak',3)"><input type="checkbox" value="Kerusakan harta benda"><span class="opt-label">Kerusakan harta benda / perabot</span></label>
+          <label class="opt-item" onclick="toggleCheck(this,'chk-dampak',3)"><input type="checkbox" value="Kerusakan bangunan"><span class="opt-label">Kerusakan bangunan</span></label>
+          <label class="opt-item" onclick="toggleCheck(this,'chk-dampak',3)"><input type="checkbox" value="Kerugian usaha/mata pencaharian"><span class="opt-label">Kerugian usaha / mata pencaharian</span></label>
+          <label class="opt-item" onclick="toggleCheck(this,'chk-dampak',3)"><input type="checkbox" value="Gangguan kesehatan"><span class="opt-label">Gangguan kesehatan (kulit, diare, dll.)</span></label>
+          <label class="opt-item" onclick="toggleCheck(this,'chk-dampak',3)"><input type="checkbox" value="Terputusnya akses jalan"><span class="opt-label">Terputusnya akses jalan</span></label>
+          <label class="opt-item" onclick="toggleCheck(this,'chk-dampak',3)"><input type="checkbox" value="Kehilangan ternak/aset pertanian"><span class="opt-label">Kehilangan ternak / aset pertanian</span></label>
+          <label class="opt-item" onclick="toggleCheck(this,'chk-dampak',3)"><input type="checkbox" value="Trauma/gangguan psikologis"><span class="opt-label">Trauma / gangguan psikologis</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q40. Lokasi pengungsian</div>
+        <div class="options-grid">
+          <label class="opt-item" onclick="selectOpt(this,'f-ungsi')"><input type="radio" name="f-ungsi" value="Tetap di rumah (lantai atas/atap)"><span class="opt-label">Tetap di rumah (lantai atas / atap)</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'f-ungsi')"><input type="radio" name="f-ungsi" value="Rumah saudara/tetangga lebih tinggi"><span class="opt-label">Rumah saudara / tetangga lebih tinggi</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'f-ungsi')"><input type="radio" name="f-ungsi" value="Tempat pengungsian resmi"><span class="opt-label">Tempat pengungsian resmi (sekolah, balai desa)</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'f-ungsi')"><input type="radio" name="f-ungsi" value="Pinggir jalan/lokasi lebih tinggi"><span class="opt-label">Pinggir jalan / lokasi lebih tinggi terdekat</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'f-ungsi')"><input type="radio" name="f-ungsi" value="Tidak pernah mengungsi"><span class="opt-label">Tidak pernah mengungsi</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Q41. Pengetahuan sistem peringatan dini</div>
+        <div class="options-grid">
+          <label class="opt-item" onclick="selectOpt(this,'f-ews')"><input type="radio" name="f-ews" value="Ya, memahami dengan baik"><span class="opt-label">Ya, saya mengetahuinya dengan baik</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'f-ews')"><input type="radio" name="f-ews" value="Ya, kurang memahami prosedur"><span class="opt-label">Ya, tapi kurang memahami prosedurnya</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'f-ews')"><input type="radio" name="f-ews" value="Tidak ada sistem EWS"><span class="opt-label">Tidak ada sistem peringatan dini di sini</span></label>
+          <label class="opt-item" onclick="selectOpt(this,'f-ews')"><input type="radio" name="f-ews" value="Tidak tahu"><span class="opt-label">Tidak tahu</span></label>
+        </div>
+      </div>
+    </div>
+  </div><!-- /page-5 -->
+
+  <!-- ══ PAGE 6: Catatan & Foto ══ -->
+  <div class="page" id="page-6">
+    <div class="sec-header">
+      <div class="sec-badge">G</div>
+      <div class="sec-title">Catatan Lapangan & Foto</div>
+    </div>
+    <div class="sec-body">
+
+      <div class="field-group">
+        <div class="field-label">Q43. Catatan Enumerator</div>
+        <textarea id="g-catatan" placeholder="Kondisi lingkungan, kendala pengukuran, informasi penting lainnya…" rows="4"></textarea>
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">📷 Foto Lapangan (maks. 3 foto, otomatis dikompres ≤1 MB)</div>
+        <div class="info-box blue">Foto akan otomatis diunggah ke Google Drive saat ada koneksi internet. Pastikan foto menyertakan objek referensi (pintu, jendela) untuk estimasi tinggi banjir.</div>
+        <div class="photo-grid">
+          <!-- Foto 1 -->
+          <div class="photo-card" id="slot-1">
+            <div class="photo-card-header">
+              <span class="photo-card-label">📷 Foto 1</span>
+              <button class="photo-remove" onclick="removePhoto(event,1)">✕ Hapus</button>
+            </div>
+            <div class="photo-preview-wrap">
+              <img id="prev-1" src="" alt="">
+              <div class="photo-status" id="status-1">⏳ Mengupload…</div>
+            </div>
+            <div class="photo-btns">
+              <button class="photo-btn-cam" onclick="triggerPhotoSource(1,'cam')">📷 Kamera</button>
+              <button class="photo-btn-gal" onclick="triggerPhotoSource(1,'gal')">🖼 Galeri</button>
+            </div>
+          </div>
+          <!-- Foto 2 -->
+          <div class="photo-card" id="slot-2">
+            <div class="photo-card-header">
+              <span class="photo-card-label">📷 Foto 2</span>
+              <button class="photo-remove" onclick="removePhoto(event,2)">✕ Hapus</button>
+            </div>
+            <div class="photo-preview-wrap">
+              <img id="prev-2" src="" alt="">
+              <div class="photo-status" id="status-2">⏳ Mengupload…</div>
+            </div>
+            <div class="photo-btns">
+              <button class="photo-btn-cam" onclick="triggerPhotoSource(2,'cam')">📷 Kamera</button>
+              <button class="photo-btn-gal" onclick="triggerPhotoSource(2,'gal')">🖼 Galeri</button>
+            </div>
+          </div>
+          <!-- Foto 3 -->
+          <div class="photo-card" id="slot-3">
+            <div class="photo-card-header">
+              <span class="photo-card-label">📷 Foto 3</span>
+              <button class="photo-remove" onclick="removePhoto(event,3)">✕ Hapus</button>
+            </div>
+            <div class="photo-preview-wrap">
+              <img id="prev-3" src="" alt="">
+              <div class="photo-status" id="status-3">⏳ Mengupload…</div>
+            </div>
+            <div class="photo-btns">
+              <button class="photo-btn-cam" onclick="triggerPhotoSource(3,'cam')">📷 Kamera</button>
+              <button class="photo-btn-gal" onclick="triggerPhotoSource(3,'gal')">🖼 Galeri</button>
+            </div>
+          </div>
+        </div>
+        <!-- Kamera (capture) -->
+        <input type="file" id="file-cam-1" accept="image/*" capture="environment" onchange="handlePhoto(event,1)">
+        <input type="file" id="file-cam-2" accept="image/*" capture="environment" onchange="handlePhoto(event,2)">
+        <input type="file" id="file-cam-3" accept="image/*" capture="environment" onchange="handlePhoto(event,3)">
+        <!-- Galeri (tanpa capture) -->
+        <input type="file" id="file-gal-1" accept="image/*" onchange="handlePhoto(event,1)">
+        <input type="file" id="file-gal-2" accept="image/*" onchange="handlePhoto(event,2)">
+        <input type="file" id="file-gal-3" accept="image/*" onchange="handlePhoto(event,3)">
+      </div>
+
+      <div class="field-group">
+        <div class="field-label">Konfirmasi</div>
+        <label class="opt-item" onclick="toggleCheck(this)" id="chk-konfirmasi-wrap">
+          <input type="checkbox" id="chk-konfirmasi" value="1">
+          <span class="opt-label">Saya menyatakan data diisi berdasarkan pengamatan dan wawancara langsung secara jujur dan akurat.</span>
+        </label>
+      </div>
+
+    </div>
+  </div><!-- /page-6 -->
+
+  <!-- Nav Buttons -->
+  <div class="nav-btns">
+    <button class="btn-prev" id="btn-prev" onclick="changePage(-1)" style="display:none">‹ Kembali</button>
+    <button class="btn-next" id="btn-next" onclick="changePage(1)">Lanjut ›</button>
+    <button class="btn-submit" id="btn-submit" onclick="submitForm()" style="display:none">✅ Simpan & Kirim</button>
+  </div>
+
+</div><!-- /app -->
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  CONFIG – Ganti URL ini setelah deploy Apps Script
+// ══════════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/GANTI_DENGAN_URL_DEPLOYMENT_ANDA/exec";
+const APP_VERSION     = "1.0.0";
+const DB_NAME         = "SurveiBanjir";
+const DB_VERSION      = 1;
+const STORE_NAME      = "submissions";
+
+// ══ State ══════════════════════════════════════════════════
+let currentPage = 0;
+const TOTAL_PAGES = 7;
+const PAGE_NAMES  = ["Identitas & Lokasi","Jejak Banjir","Karakteristik Bangunan","Tutupan Lahan","Frekuensi/Intensitas/Durasi","Dampak & Respons","Catatan & Foto"];
+let db, currentId;
+let photos = { 1: null, 2: null, 3: null };   // base64 compressed
+let gpsData = {};
+
+// ══ IndexedDB ══════════════════════════════════════════════
+function openDB() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains(STORE_NAME)) {
+        const s = d.createObjectStore(STORE_NAME, { keyPath: "id" });
+        s.createIndex("status", "status", { unique: false });
+      }
+    };
+    req.onsuccess = e => { db = e.target.result; res(db); };
+    req.onerror   = e => rej(e.target.error);
+  });
+}
+
+function dbPut(record)    { return new Promise((r,j) => { const t = db.transaction(STORE_NAME,"readwrite").objectStore(STORE_NAME); const q = t.put(record); q.onsuccess=()=>r(); q.onerror=e=>j(e); }); }
+function dbGet(id)        { return new Promise((r,j) => { const t = db.transaction(STORE_NAME,"readonly").objectStore(STORE_NAME); const q = t.get(id); q.onsuccess=e=>r(e.target.result); q.onerror=e=>j(e); }); }
+function dbGetAll()       { return new Promise((r,j) => { const t = db.transaction(STORE_NAME,"readonly").objectStore(STORE_NAME); const q = t.getAll(); q.onsuccess=e=>r(e.target.result); q.onerror=e=>j(e); }); }
+function dbDelete(id)     { return new Promise((r,j) => { const t = db.transaction(STORE_NAME,"readwrite").objectStore(STORE_NAME); const q = t.delete(id); q.onsuccess=()=>r(); q.onerror=e=>j(e); }); }
+
+// ══ Init ═══════════════════════════════════════════════════
+window.addEventListener("load", async () => {
+  await openDB();
+  checkOnline();
+  window.addEventListener("online",  () => { checkOnline(); syncAll(); });
+  window.addEventListener("offline", checkOnline);
+  renderSubmissionsList();
+  document.getElementById("f-tanggal").value = new Date().toISOString().split("T")[0];
+});
+
+function checkOnline() {
+  const bar = document.getElementById("offline-bar");
+  const dot = document.getElementById("sync-dot");
+  if (navigator.onLine) {
+    bar.classList.remove("show");
+    dot.classList.add("synced");
+    document.getElementById("sync-label").textContent = "Kirim";
+  } else {
+    bar.classList.add("show");
+    dot.classList.remove("synced");
+    document.getElementById("sync-label").textContent = "Offline";
+  }
+}
+
+// ══ Cover & Navigation ════════════════════════════════════
+function goHome() {
+  document.getElementById("app").style.display   = "none";
+  document.getElementById("cover").style.display = "flex";
+  renderSubmissionsList();
+}
+
+function startForm() {
+  // Reset form
+  currentPage = 0;
+  photos = { 1: null, 2: null, 3: null };
+  gpsData = {};
+  currentId = generateId();
+  document.getElementById("f-no-kues").value = currentId;
+  document.getElementById("f-tanggal").value = new Date().toISOString().split("T")[0];
+  // Reset GPS display
+  ["lat","lon","elev","acc"].forEach(k => document.getElementById("gps-"+k).textContent = "–");
+  // Reset photo slots
+  [1,2,3].forEach(i => {
+    document.getElementById("slot-"+i).classList.remove("has-photo","uploading");
+    document.getElementById("prev-"+i).src = "";
+    ["cam","gal"].forEach(src => {
+      const el = document.getElementById(`file-${src}-${i}`);
+      if (el) el.value = "";
+    });
+  });
+
+  document.getElementById("cover").style.display = "none";
+  document.getElementById("app").style.display   = "block";
+  showPage(0);
+  renderProgress();
+}
+
+function generateId() {
+  const now = new Date();
+  const d = now.toISOString().slice(0,10).replace(/-/g,"");
+  const r = Math.floor(Math.random()*9000+1000);
+  return `BJA_${d}_${r}`;
+}
+
+// ══ Page Navigation ═══════════════════════════════════════
+function showPage(n) {
+  document.querySelectorAll(".page").forEach((p,i) => {
+    p.classList.toggle("active", i === n);
+  });
+  document.getElementById("btn-prev").style.display   = n === 0 ? "none" : "flex";
+  document.getElementById("btn-next").style.display   = n === TOTAL_PAGES-1 ? "none" : "flex";
+  document.getElementById("btn-submit").style.display = n === TOTAL_PAGES-1 ? "flex" : "none";
+  window.scrollTo(0, 0);
+  renderProgress();
+}
+
+function changePage(dir) {
+  const next = currentPage + dir;
+  if (next < 0 || next >= TOTAL_PAGES) return;
+  currentPage = next;
+  showPage(currentPage);
+}
+
+function renderProgress() {
+  const wrap = document.getElementById("progress-steps");
+  wrap.innerHTML = "";
+  for (let i = 0; i < TOTAL_PAGES; i++) {
+    const pip = document.createElement("div");
+    pip.className = "step-pip" + (i < currentPage ? " done" : i === currentPage ? " active" : "");
+    wrap.appendChild(pip);
+  }
+  document.getElementById("progress-section").textContent = PAGE_NAMES[currentPage];
+  document.getElementById("progress-count").textContent = `${currentPage+1} / ${TOTAL_PAGES}`;
+}
+
+// ══ UI Helpers ═════════════════════════════════════════════
+function selectOpt(el, name) {
+  document.querySelectorAll(`[name="${name}"]`).forEach(r => {
+    r.closest(".opt-item").classList.remove("selected");
+  });
+  el.classList.add("selected");
+}
+
+function toggleCheck(el, groupId, maxSelect) {
+  el.classList.toggle("selected", el.querySelector("input").checked);
+  if (maxSelect && groupId) {
+    const grp = document.getElementById(groupId);
+    const checked = grp ? grp.querySelectorAll("input:checked") : [];
+    if (checked.length > maxSelect) {
+      el.querySelector("input").checked = false;
+      el.classList.remove("selected");
+      showToast(`Maksimal ${maxSelect} pilihan`, "error");
+    }
+  }
+}
+
+function toggleSec(name, showVal, secId) {
+  const checked = document.querySelector(`[name="${name}"]:checked`);
+  const sec = document.getElementById(secId);
+  if (sec) sec.style.display = (checked && checked.value === showVal) ? "block" : "none";
+}
+
+function addRow(tbodyId, cols) {
+  const tbody = document.getElementById(tbodyId);
+  const tr = document.createElement("tr");
+  for (let i = 0; i < cols; i++) {
+    const td = document.createElement("td");
+    td.innerHTML = `<input type="text" placeholder="—">`;
+    tr.appendChild(td);
+  }
+  tbody.appendChild(tr);
+}
+
+// ══ GPS ════════════════════════════════════════════════════
+function getGPS() {
+  const btn = document.getElementById("gps-btn");
+  const msg = document.getElementById("gps-accuracy");
+  if (!navigator.geolocation) { showToast("GPS tidak tersedia di browser ini","error"); return; }
+  btn.textContent = "⏳ Mengambil lokasi…";
+  btn.classList.add("loading");
+  msg.textContent = "Menunggu sinyal GPS…";
+  msg.className   = "";
+
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude, longitude, altitude, accuracy } = pos.coords;
+    gpsData = { lat: latitude.toFixed(6), lon: longitude.toFixed(6), elev: altitude ? altitude.toFixed(1) : "N/A", acc: accuracy.toFixed(1) };
+    document.getElementById("gps-lat").textContent  = gpsData.lat;
+    document.getElementById("gps-lon").textContent  = gpsData.lon;
+    document.getElementById("gps-elev").textContent = gpsData.elev;
+    document.getElementById("gps-acc").textContent  = gpsData.acc;
+    msg.textContent = accuracy <= 10 ? `✅ Akurasi baik: ±${gpsData.acc} m` : accuracy <= 30 ? `⚠️ Akurasi sedang: ±${gpsData.acc} m` : `❌ Akurasi buruk: ±${gpsData.acc} m – tunggu sinyal lebih baik`;
+    msg.className   = accuracy <= 15 ? "good" : accuracy <= 30 ? "" : "bad";
+    btn.textContent = "🔄 Perbarui Lokasi";
+    btn.classList.remove("loading");
+  }, err => {
+    msg.textContent = "Gagal mengambil GPS. Isi manual di bawah.";
+    msg.className   = "bad";
+    btn.textContent = "📡 Ambil Lokasi Saat Ini";
+    btn.classList.remove("loading");
+  }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+}
+
+// ══ Photo Handling ═════════════════════════════════════════
+function triggerPhotoSource(n, source) {
+  // source: 'cam' = kamera langsung, 'gal' = galeri
+  const inputId = source === 'cam' ? `file-cam-${n}` : `file-gal-${n}`;
+  // Reset value dulu agar onchange terpicu meski file sama
+  document.getElementById(inputId).value = "";
+  document.getElementById(inputId).click();
+}
+
+function handlePhoto(event, n) {
+  const file = event.target.files[0];
+  if (!file) return;
+  compressImage(file, 1024*1024, (blob, dataUrl) => {
+    photos[n] = blob;
+    document.getElementById("prev-"+n).src = dataUrl;
+    document.getElementById("slot-"+n).classList.add("has-photo");
+    showToast(`Foto ${n} siap (${(blob.size/1024).toFixed(0)} KB)`,"success");
+  });
+}
+
+function removePhoto(e, n) {
+  e.stopPropagation();
+  photos[n] = null;
+  document.getElementById("prev-"+n).src = "";
+  document.getElementById("slot-"+n).classList.remove("has-photo","uploading");
+  // Reset semua input file untuk slot ini
+  ["cam","gal"].forEach(src => {
+    const el = document.getElementById(`file-${src}-${n}`);
+    if (el) el.value = "";
+  });
+}
+
+function compressImage(file, maxBytes, callback) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      const canvas = document.createElement("canvas");
+      let quality = 0.85;
+      function tryCompress(q) {
+        // Scale down if very large
+        const maxDim = 1600;
+        if (w > maxDim || h > maxDim) {
+          const ratio = Math.min(maxDim/w, maxDim/h);
+          w = Math.round(w * ratio); h = Math.round(h * ratio);
+        }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => {
+          if (blob.size > maxBytes && q > 0.3) {
+            tryCompress(q - 0.1);
+          } else {
+            const dr = new FileReader();
+            dr.onload = ev => callback(blob, ev.target.result);
+            dr.readAsDataURL(blob);
+          }
+        }, "image/jpeg", q);
+      }
+      tryCompress(quality);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ══ Collect Form Data ══════════════════════════════════════
+function collectData() {
+  const get   = id => (document.getElementById(id)||{}).value || "";
+  const radio = name => { const el = document.querySelector(`[name="${name}"]:checked`); return el ? el.value : ""; };
+  const checks = id => { const c = document.getElementById(id); if(!c) return ""; return Array.from(c.querySelectorAll("input:checked")).map(x=>x.value).join("; "); };
+  const tableRows = (tbodyId, sep=" | ", rowSep=" // ") => {
+    const rows = document.querySelectorAll(`#${tbodyId} tr`);
+    return Array.from(rows).map(tr => Array.from(tr.querySelectorAll("input")).map(i=>i.value).join(sep)).filter(r=>r.replace(/\|/g,"").trim()).join(rowSep);
+  };
+
+  // GPS fallback ke manual
+  const lat = gpsData.lat || get("gps-lat-manual");
+  const lon = gpsData.lon || get("gps-lon-manual");
+
+  // ── Kalkulasi otomatis: indeks paparan bangunan (1–5) ──
+  // Skor = kombinasi frekuensi × intensitas × struktur
+  const frekMap   = {"1 kali":1,"2-3 kali":2,"4-5 kali":3,">5 kali":4};
+  const intensMap = {"Ringan":1,"Sedang":2,"Berat":3,"Sangat berat":4};
+  const strukMap  = {"Beton bertulang permanen":1,"Dinding bata/batako":2,"Semi permanen":3,"Dinding kayu":4,"Dinding bambu/anyaman":5};
+  const frekSkor   = frekMap[radio("b-frek")]   || 0;
+  const intensSkor = intensMap[radio("e-intens")]|| 0;
+  const strukSkor  = strukMap[radio("c-struktur")]|| 0;
+  let exposureIdx  = "";
+  if (frekSkor && intensSkor && strukSkor) {
+    const raw = ((frekSkor/4) + (intensSkor/4) + (strukSkor/5)) / 3;
+    exposureIdx = (raw * 5).toFixed(2); // skala 0–5
+  }
+
+  // ── Kalkulasi: selisih tinggi genangan vs tinggi lantai ──
+  const tinggiGenanganCm = parseFloat(get("b-tinggi-num")) || 0;
+  const tinggiLantaiCm   = parseFloat(get("c-tinggi-lantai")) || 0;
+  const selisihExposure  = tinggiGenanganCm && tinggiLantaiCm
+    ? (tinggiGenanganCm - tinggiLantaiCm).toFixed(0)
+    : "";
+
+  // ── Flag reliabilitas: lama tinggal < 5 tahun ──
+  const lamaTinggal = parseInt(get("f-lama-tinggal")) || 0;
+  const flagReliabilitas = lamaTinggal > 0 && lamaTinggal < 5
+    ? "PERLU VERIFIKASI – lama tinggal < 5 thn"
+    : "";
+
+  return {
+    // ── Identitas & Lokasi ──
+    "No Kuesioner":            currentId,
+    "Tanggal Survei":          get("f-tanggal"),
+    "Nama Enumerator":         get("f-enumerator"),
+    "No HP Enumerator":        get("f-hp-enum"),
+    "Latitude":                lat,
+    "Longitude":               lon,
+    "Elevasi (m)":             gpsData.elev || "",
+    "Akurasi GPS (m)":         gpsData.acc  || "",
+    "Desa/Kelurahan":          get("f-desa"),
+    "Kecamatan":               get("f-kecamatan"),
+    "Kabupaten":               "Pohuwato",
+    "DAS":                     get("f-das"),
+    // ── Responden ──
+    "Nama Responden":          get("f-nama-resp"),
+    "Usia":                    get("f-usia"),
+    "Jenis Kelamin":           radio("jk"),
+    "Lama Tinggal (thn)":      get("f-lama-tinggal"),
+    "Status Kepemilikan":      radio("kepemilikan"),
+    "Flag Reliabilitas Data":  flagReliabilitas,
+    // ── Bagian B: Jejak Banjir ──
+    "Pernah Terdampak Banjir": radio("b-pernah"),
+    "Frekuensi Banjir 5 Thn":  radio("b-frek"),
+    "Ada Jejak Fisik":         radio("b-jejak"),
+    "Tinggi Jejak Banjir (Rekap Tabel)": tableRows("tbl-jejak-body"),
+    "Tinggi Genangan Terbesar (cm)": get("b-tinggi-num"),
+    "Bagian Bangunan Terendam": radio("b-bagian"),
+    "Arah Datang Banjir":      radio("b-arah"),
+    "Sisa Genangan Pasca Surut": radio("b-sisa"),
+    "Elevasi Relatif Lokasi":  radio("b-elev-rel"),
+    // ── Bagian C: Bangunan ──
+    "Fungsi Bangunan":         radio("c-fungsi"),
+    "Jumlah Lantai":           radio("c-lantai"),
+    "Tinggi Lantai dari Tanah (cm)": get("c-tinggi-lantai"),
+    "Selisih Genangan-Lantai (cm)": selisihExposure,
+    "Struktur Bangunan":       radio("c-struktur"),
+    "Material Atap":           get("c-atap"),
+    "Pondasi":                 get("c-pondasi"),
+    "Kondisi Fisik Bangunan":  radio("c-kondisi"),
+    "Upaya Adaptasi Banjir":   checks("chk-adaptasi"),
+    "Tahun Bangunan":          get("c-tahun"),
+    "Dimensi Bangunan":        get("c-dimensi"),
+    "Indeks Paparan Bangunan (0-5)": exposureIdx,
+    // ── Bagian D: Tutupan Lahan ──
+    "Tutupan Lahan Radius 50m (Ground Truth)": checks("chk-tutupan-50"),
+    "Tutupan Lahan Radius 200m": checks("chk-tutupan"),
+    "Perubahan Tutupan Lahan": radio("d-perubahan"),
+    "Kondisi Vegetasi Riparian": radio("d-veg"),
+    "Jarak ke Sungai":         get("d-jarak"),
+    "Kondisi Drainase":        get("d-drainase"),
+    "Perubahan Kondisi Sungai": checks("chk-sungai"),
+    "Kaitan Perubahan Lahan-Banjir": radio("d-kausal"),
+    "Kaitan Aktivitas Hulu-Banjir": radio("d-hulu"),
+    // ── Bagian E: Frekuensi/Intensitas/Durasi ──
+    "Frekuensi Banjir Wilayah": radio("e-frek-wil"),
+    "Musim Banjir":            radio("e-musim"),
+    "Kronologi Kejadian (Thn|Bln|Tinggi cm|Durasi|Sumber)": tableRows("tbl-kronologi-body"),
+    "Intensitas Banjir Terbesar": radio("e-intens"),
+    "Kecepatan Datang Banjir": get("e-cepat"),
+    "Kecepatan Arus":          get("e-arus"),
+    "Material Banjir":         radio("e-material"),
+    "Peringatan Sebelum Banjir": radio("e-warning"),
+    "Titik Awal Banjir (Ada/Tidak)": radio("e-titik-awal"),
+    "Titik Awal Banjir (Lokasi)": get("e-titik-awal-nama"),
+    "Durasi Rata-rata Banjir": get("e-durasi"),
+    "Durasi Banjir Terbesar":  get("e-durasi-terbesar"),
+    "Tahun Kejadian Terbesar": get("e-tahun-terbesar"),
+    "Lama Kondisi Normal Kembali": get("e-normal"),
+    "Tren Banjir 5 Thn":       radio("e-tren"),
+    "Penyebab Utama Banjir":   checks("chk-penyebab"),
+    // ── Bagian F: Dampak ──
+    "Dampak Terbesar":         checks("chk-dampak"),
+    "Lokasi Pengungsian":      radio("f-ungsi"),
+    "Pengetahuan Sistem Peringatan Dini": radio("f-ews"),
+    // ── Bagian G: Catatan ──
+    "Catatan Enumerator":      get("g-catatan"),
+    "Konfirmasi Kelengkapan Data": document.getElementById("chk-konfirmasi").checked ? "Ya" : "Tidak",
+    // ── Foto ──
+    "Foto 1": "", "Foto 2": "", "Foto 3": "",
+    // ── Metadata ──
+    "Timestamp Kirim":         new Date().toLocaleString("id-ID"),
+    "Versi App":               APP_VERSION,
+  };
+}
+
+// ══ Submit ═════════════════════════════════════════════════
+async function submitForm() {
+  const konfirmasi = document.getElementById("chk-konfirmasi");
+  if (!konfirmasi.checked) { showToast("Centang pernyataan konfirmasi terlebih dahulu","error"); return; }
+  const enumerator = document.getElementById("f-enumerator").value.trim();
+  if (!enumerator) { showToast("Nama enumerator wajib diisi","error"); currentPage=0; showPage(0); return; }
+
+  const data = collectData();
+
+  // Simpan foto sebagai blob ke record
+  const photoBlobs = {};
+  for (let i = 1; i <= 3; i++) { if (photos[i]) photoBlobs[i] = photos[i]; }
+
+  const record = {
+    id:         currentId,
+    status:     "pending",
+    data,
+    photoBlobs, // blob objects
+    tanggal:    data["Tanggal Survei"],
+    createdAt:  Date.now()
+  };
+
+  await dbPut(record);
+  showToast("Data tersimpan di perangkat ✓","success");
+
+  // Coba kirim langsung jika online
+  if (navigator.onLine) {
+    await sendRecord(record);
+  } else {
+    showToast("Offline – data dikirim saat ada internet","");
+  }
+
+  setTimeout(() => goHome(), 1500);
+}
+
+// ══ Send to Apps Script ════════════════════════════════════
+async function sendRecord(record) {
+  try {
+    // 1. Kirim data form
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "submit", data: record.data }),
+      headers: { "Content-Type": "application/json" }
+    });
+    const json = await res.json();
+    if (json.status !== "ok") throw new Error(json.message);
+
+    // 2. Upload foto
+    for (let i = 1; i <= 3; i++) {
+      if (record.photoBlobs && record.photoBlobs[i]) {
+        await uploadPhoto(record.id, i, record.photoBlobs[i], record.tanggal);
+      }
+    }
+
+    // Mark as sent
+    record.status = "sent";
+    delete record.photoBlobs; // hemat storage
+    await dbPut(record);
+    showToast("✅ Data & foto berhasil dikirim","success");
+    updatePendingBadge();
+  } catch(err) {
+    console.warn("Gagal kirim, akan dicoba lagi:", err);
+    showToast("Gagal kirim – akan dicoba saat online","error");
+  }
+}
+
+async function uploadPhoto(noKues, idx, blob, tanggal) {
+  const filename = `${noKues}_foto${idx}.jpg`;
+  const b64 = await blobToBase64(blob);
+  await fetch(APPS_SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "uploadPhoto",
+      data: b64.split(",")[1],
+      filename, noKuesioner: noKues,
+      fotoIndex: idx, tanggal
+    }),
+    headers: { "Content-Type": "application/json" }
+  });
+}
+
+function blobToBase64(blob) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(blob);
+  });
+}
+
+// ══ Sync All Pending ═══════════════════════════════════════
+async function syncAll() {
+  if (!navigator.onLine) { showToast("Tidak ada koneksi internet","error"); return; }
+  const all = await dbGetAll();
+  const pending = all.filter(r => r.status === "pending");
+  if (pending.length === 0) { showToast("Semua data sudah terkirim ✓","success"); return; }
+  showToast(`Mengirim ${pending.length} data…`,"");
+  for (const rec of pending) await sendRecord(rec);
+  renderSubmissionsList();
+  updatePendingBadge();
+}
+
+// ══ UI Updates ═════════════════════════════════════════════
+async function renderSubmissionsList() {
+  const all = await dbGetAll();
+  const panel = document.getElementById("submissions-panel");
+  const list  = document.getElementById("submissions-list");
+  const coverStatus = document.getElementById("cover-status");
+
+  if (all.length === 0) {
+    panel.style.display = "none";
+    coverStatus.textContent = "Belum ada data tersimpan";
+    return;
+  }
+  panel.style.display = "block";
+  coverStatus.textContent = `${all.length} data tersimpan`;
+
+  list.innerHTML = all.slice(-8).reverse().map(r => `
+    <div class="sub-item">
+      <span class="sub-no">${r.id}</span>
+      <span class="sub-status ${r.status}">${r.status === "sent" ? "✅ Terkirim" : "⏳ Pending"}</span>
+    </div>
+  `).join("");
+
+  updatePendingBadge();
+}
+
+async function updatePendingBadge() {
+  const all     = await dbGetAll();
+  const pending = all.filter(r => r.status === "pending").length;
+  const badge   = document.getElementById("pending-badge");
+  badge.style.display = pending > 0 ? "inline" : "none";
+  badge.textContent   = pending;
+}
+
+// ══ Toast ══════════════════════════════════════════════════
+function showToast(msg, type) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "show" + (type ? " "+type : "");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = "", 3000);
+}
+
+// ══ Service Worker Registration ════════════════════════════
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js")
+      .then(reg => {
+        console.log("SW registered:", reg.scope);
+        // Cek update SW
+        reg.addEventListener("updatefound", () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              showToast("Update tersedia – muat ulang untuk memperbarui app", "");
+            }
+          });
+        });
+      })
+      .catch(err => console.warn("SW registration failed:", err));
+  });
+}
+</script>
+</body>
+</html>
