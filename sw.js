@@ -54,14 +54,18 @@ self.addEventListener("activate", event => {
 // ── Fetch: Network-first dengan fallback ke cache ──────────
 self.addEventListener("fetch", event => {
   const req = event.request;
+  const url = new URL(req.url);
 
-  // Lewati request non-GET (POST ke Apps Script tetap ke network)
+  // Lewati request non-GET
   if (req.method !== "GET") return;
+
+  // Lewati request bukan http/https (chrome-extension, dll.)
+  if (!url.protocol.startsWith("http")) return;
 
   // Lewati request ke Apps Script (selalu butuh network)
   if (req.url.includes("script.google.com")) return;
 
-  // Lewati request ke Google Drive (upload foto)
+  // Lewati request ke Google Drive / APIs
   if (req.url.includes("drive.google.com") ||
       req.url.includes("googleapis.com")) return;
 
