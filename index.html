@@ -1787,16 +1787,19 @@ async function submitForm() {
 // ══ Send to Apps Script ════════════════════════════════════
 async function sendRecord(record) {
   try {
-    // 1. Kirim data form
-    const res = await fetch(APPS_SCRIPT_URL, {
-      method: "POST",
-      body: JSON.stringify({ action: "submit", data: record.data }),
-      headers: { "Content-Type": "application/json" }
-    });
-    const json = await res.json();
-    if (json.status !== "ok") throw new Error(json.message);
+    // Kirim data form via fetch no-cors (satu-satunya cara yang bekerja
+    // dengan Apps Script dari domain berbeda tanpa custom server)
+    const formData = new FormData();
+    formData.append("payload", JSON.stringify({ action: "submit", data: record.data }));
 
-    // 2. Upload foto
+    await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",   // bypass CORS — response akan jadi opaque tapi data terkirim
+      body: formData,
+    });
+
+    // Dengan no-cors kita tidak bisa baca response, jadi anggap sukses
+    // jika tidak ada exception. Upload foto jika ada.
     for (let i = 1; i <= 3; i++) {
       if (record.photoBlobs && record.photoBlobs[i]) {
         await uploadPhoto(record.id, i, record.photoBlobs[i], record.tanggal);
@@ -1805,9 +1808,9 @@ async function sendRecord(record) {
 
     // Mark as sent
     record.status = "sent";
-    delete record.photoBlobs; // hemat storage
+    delete record.photoBlobs;
     await dbPut(record);
-    showToast("✅ Data & foto berhasil dikirim","success");
+    showToast("✅ Data berhasil dikirim","success");
     updatePendingBadge();
   } catch(err) {
     console.warn("Gagal kirim, akan dicoba lagi:", err);
