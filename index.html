@@ -1787,26 +1787,19 @@ async function submitForm() {
 // ══ Send to Apps Script ════════════════════════════════════
 async function sendRecord(record) {
   try {
-    // Kirim data form via fetch no-cors (satu-satunya cara yang bekerja
-    // dengan Apps Script dari domain berbeda tanpa custom server)
-    const formData = new FormData();
-    formData.append("payload", JSON.stringify({ action: "submit", data: record.data }));
-
+    // Kirim tanpa Content-Type header agar tidak trigger CORS preflight
     await fetch(APPS_SCRIPT_URL, {
       method: "POST",
-      mode: "no-cors",   // bypass CORS — response akan jadi opaque tapi data terkirim
-      body: formData,
+      body: JSON.stringify({ action: "submit", data: record.data }),
     });
-
-    // Dengan no-cors kita tidak bisa baca response, jadi anggap sukses
-    // jika tidak ada exception. Upload foto jika ada.
+ 
+    // Upload foto jika ada
     for (let i = 1; i <= 3; i++) {
       if (record.photoBlobs && record.photoBlobs[i]) {
         await uploadPhoto(record.id, i, record.photoBlobs[i], record.tanggal);
       }
     }
-
-    // Mark as sent
+ 
     record.status = "sent";
     delete record.photoBlobs;
     await dbPut(record);
@@ -1817,24 +1810,21 @@ async function sendRecord(record) {
     showToast("Gagal kirim – akan dicoba saat online","error");
   }
 }
-
+ 
 async function uploadPhoto(noKues, idx, blob, tanggal) {
   const filename = `${noKues}_foto${idx}.jpg`;
   const b64 = await blobToBase64(blob);
-  const formData = new FormData();
-  formData.append("payload", JSON.stringify({
-    action: "uploadPhoto",
-    data: b64.split(",")[1],
-    filename, noKuesioner: noKues,
-    fotoIndex: idx, tanggal
-  }));
   await fetch(APPS_SCRIPT_URL, {
     method: "POST",
-    mode: "no-cors",
-    body: formData,
+    body: JSON.stringify({
+      action: "uploadPhoto",
+      data: b64.split(",")[1],
+      filename, noKuesioner: noKues,
+      fotoIndex: idx, tanggal
+    }),
   });
 }
-
+ 
 function blobToBase64(blob) {
   return new Promise((res, rej) => {
     const r = new FileReader();
@@ -1843,7 +1833,7 @@ function blobToBase64(blob) {
     r.readAsDataURL(blob);
   });
 }
-
+ 
 // ══ Sync All Pending ═══════════════════════════════════════
 async function syncAll() {
   if (!navigator.onLine) { showToast("Tidak ada koneksi internet","error"); return; }
@@ -1855,14 +1845,14 @@ async function syncAll() {
   renderSubmissionsList();
   updatePendingBadge();
 }
-
+ 
 // ══ UI Updates ═════════════════════════════════════════════
 async function renderSubmissionsList() {
   const all = await dbGetAll();
   const panel = document.getElementById("submissions-panel");
   const list  = document.getElementById("submissions-list");
   const coverStatus = document.getElementById("cover-status");
-
+ 
   if (all.length === 0) {
     panel.style.display = "none";
     coverStatus.textContent = "Belum ada data tersimpan";
@@ -1870,17 +1860,17 @@ async function renderSubmissionsList() {
   }
   panel.style.display = "block";
   coverStatus.textContent = `${all.length} data tersimpan`;
-
+ 
   list.innerHTML = all.slice(-8).reverse().map(r => `
     <div class="sub-item">
       <span class="sub-no">${r.id}</span>
       <span class="sub-status ${r.status}">${r.status === "sent" ? "✅ Terkirim" : "⏳ Pending"}</span>
     </div>
   `).join("");
-
+ 
   updatePendingBadge();
 }
-
+ 
 async function updatePendingBadge() {
   const all     = await dbGetAll();
   const pending = all.filter(r => r.status === "pending").length;
@@ -1888,7 +1878,7 @@ async function updatePendingBadge() {
   badge.style.display = pending > 0 ? "inline" : "none";
   badge.textContent   = pending;
 }
-
+ 
 // ══ Toast ══════════════════════════════════════════════════
 function showToast(msg, type) {
   const t = document.getElementById("toast");
@@ -1897,7 +1887,7 @@ function showToast(msg, type) {
   clearTimeout(t._timer);
   t._timer = setTimeout(() => t.className = "", 3000);
 }
-
+ 
 // ══ Service Worker Registration ════════════════════════════
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
