@@ -1821,15 +1821,17 @@ async function sendRecord(record) {
 async function uploadPhoto(noKues, idx, blob, tanggal) {
   const filename = `${noKues}_foto${idx}.jpg`;
   const b64 = await blobToBase64(blob);
+  const formData = new FormData();
+  formData.append("payload", JSON.stringify({
+    action: "uploadPhoto",
+    data: b64.split(",")[1],
+    filename, noKuesioner: noKues,
+    fotoIndex: idx, tanggal
+  }));
   await fetch(APPS_SCRIPT_URL, {
     method: "POST",
-    body: JSON.stringify({
-      action: "uploadPhoto",
-      data: b64.split(",")[1],
-      filename, noKuesioner: noKues,
-      fotoIndex: idx, tanggal
-    }),
-    headers: { "Content-Type": "application/json" }
+    mode: "no-cors",
+    body: formData,
   });
 }
 
